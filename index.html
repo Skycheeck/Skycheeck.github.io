@@ -1,0 +1,881 @@
+<!doctype html>
+<html lang="ru" data-lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Сергей Хрулев</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Unity C# / .NET разработчик. Мультиплеерные игровые системы от серверных правил до клиентского UI.">
+<meta name="theme-color" content="#0F1016">
+<meta property="og:type" content="profile">
+<meta property="og:title" content="Сергей Хрулев · Unity C# / .NET Developer">
+<meta property="og:description" content="Мультиплеерные игровые системы на Unity и .NET 8, от серверных правил до клиентского UI.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230F1016'/%3E%3Crect x='2' y='2' width='28' height='28' rx='4' fill='none' stroke='%23E8BE62' stroke-width='2'/%3E%3Ctext x='16' y='21' font-family='sans-serif' font-size='13' font-weight='800' text-anchor='middle' fill='%23E8BE62'%3ESK%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600&family=Tektur:wdth,wght@75..100,400..900&display=swap">
+<script>
+  (function () {
+    var d = document.documentElement;
+    var saved = null;
+    try { saved = window.localStorage.getItem('cv-lang'); } catch (e) {}
+    var h = (location.hash || '').slice(1).toLowerCase();
+    var prefs = navigator.languages || [navigator.language || 'ru'];
+    var lang = (h === 'ru' || h === 'en') ? h : (saved || (prefs.some(function (l) { return /^ru\b/i.test(l); }) ? 'ru' : 'en'));
+    if (lang !== 'ru' && lang !== 'en') lang = 'ru';
+    d.setAttribute('data-lang', lang);
+    d.lang = lang;
+  })();
+</script>
+<style>
+  /* Layout: compact game-menu hero (name, pitch, actions | quiet stat list), achievements right below
+     so they land on the first screen, then a short career ledger, the stack line and contacts.
+     One deliberate dark look with a single soft gold accent. */
+  :root {
+    /* Color: soft graphite neutrals, one muted gold for actions, numbers and badges */
+    --bg: #0F1016;
+    --panel: #15161E;
+    --panel-2: #1A1C26;
+    --line: #252734;
+    --line-2: #343748;
+    --ink: #E8E9F0;
+    --ink-2: #B3B6C6;
+    --muted: #80849A;
+    --accent: #E8BE62;
+    --accent-hi: #F0CD82;
+    --accent-ink: #1A1408;
+    --accent-soft: rgba(232, 190, 98, .08);
+    --accent-line: rgba(232, 190, 98, .4);
+    --accent-ring: rgba(232, 190, 98, .35);
+    --grid: rgba(255, 255, 255, .022);
+    --shade: rgba(15, 16, 22, .72);
+
+    /* Type: squared HUD face for names, numbers and labels; rounded game-UI grotesque for reading */
+    --font-display: "Tektur", "Rubik", system-ui, sans-serif;
+    --font-body: "Rubik", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+    --gutter: clamp(16px, 4vw, 36px);
+    --radius: 4px;
+    color-scheme: dark;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  body {
+    position: relative;
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  /* Faint scene-view grid behind the hero */
+  body::before {
+    content: "";
+    position: absolute; inset: 0 0 auto 0; height: 640px;
+    z-index: -1; pointer-events: none;
+    background:
+      linear-gradient(var(--grid) 1px, transparent 1px) 0 0 / 44px 44px,
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0 / 44px 44px;
+    -webkit-mask-image: linear-gradient(to bottom, #000 30%, transparent);
+    mask-image: linear-gradient(to bottom, #000 30%, transparent);
+  }
+  html[data-lang="ru"] [lang="en"],
+  html[data-lang="en"] [lang="ru"] { display: none !important; }
+
+  a { color: var(--accent); text-underline-offset: .2em; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  ::selection { background: var(--accent); color: var(--accent-ink); }
+  .sr {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+  .i {
+    width: 18px; height: 18px; flex: none;
+    fill: none; stroke: currentColor; stroke-width: 1.8;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .hud {
+    font-family: var(--font-display);
+    font-stretch: 85%;
+    font-weight: 600;
+    font-size: .72rem;
+    line-height: 1.2;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .wrap {
+    width: 100%;
+    max-width: calc(1120px + 2 * var(--gutter));
+    margin-inline: auto;
+    padding-left: max(var(--gutter), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--gutter), env(safe-area-inset-right, 0px));
+  }
+
+  /* Language switch, tucked into the eyebrow row */
+  .lang { display: inline-flex; flex: none; padding: 2px; gap: 2px; border: 1px solid var(--line); border-radius: var(--radius); }
+  .lang button {
+    font: 600 .68rem/1 var(--font-display); letter-spacing: .12em;
+    padding: .4rem .55rem; border: 0; border-radius: 2px;
+    background: transparent; color: var(--muted); cursor: pointer;
+  }
+  .lang button:hover { color: var(--ink); }
+  .lang button[aria-pressed="true"] { background: var(--line-2); color: var(--ink); }
+
+  /* Hero */
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(250px, 19rem);
+    column-gap: clamp(32px, 5vw, 80px);
+    padding-block: clamp(24px, 4.4vw, 52px) clamp(10px, 1.6vw, 16px);
+  }
+  .hero-top { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 1.1rem; }
+  .hero-main { grid-column: 1; min-width: 0; }
+  .hero > .stats { grid-column: 2; align-self: center; }
+  .hero > .stack-line { grid-column: 1 / -1; margin-top: clamp(26px, 3.2vw, 38px); }
+  .eyebrow { display: flex; align-items: center; gap: .6rem; margin: 0; }
+  .eyebrow::before { content: ""; width: 7px; height: 7px; background: var(--accent); transform: rotate(45deg); }
+  .name {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2.2rem, 1.3rem + 3.4vw, 3.8rem);
+    line-height: 1;
+    letter-spacing: -.005em;
+    text-wrap: balance;
+  }
+  .thesis {
+    margin: 1.2rem 0 0;
+    max-width: 36rem;
+    font-size: clamp(1.02rem, 1rem + .25vw, 1.15rem);
+    line-height: 1.5;
+    color: var(--ink-2);
+    text-wrap: pretty;
+  }
+  .thesis b { font-weight: 500; color: var(--ink); }
+
+  .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 30px; margin-top: 1.8rem; }
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: .55rem;
+    min-height: 2.75rem; padding: .5rem 1.4rem;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font: 700 .88rem/1 var(--font-display);
+    letter-spacing: .08em; text-transform: uppercase; text-decoration: none;
+    clip-path: polygon(9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px);
+    transition: background-color .15s;
+  }
+  .btn-primary:hover { background: var(--accent-hi); }
+  .btn-primary:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--accent-ink); }
+  .btn-primary .i { stroke-width: 2.2; }
+  .links { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 24px; }
+  .link {
+    display: inline-flex; align-items: center; gap: .5rem;
+    color: var(--ink-2); text-decoration: none; font-size: .95rem;
+    transition: color .15s;
+  }
+  .link .i { width: 17px; height: 17px; color: var(--muted); transition: color .15s; }
+  .link .i-ext { width: 13px; height: 13px; }
+  .link:hover, .link:hover .i { color: var(--accent); }
+  .email { display: inline-flex; align-items: center; gap: 2px; }
+  .addr { overflow-wrap: anywhere; }
+  .copy {
+    display: grid; place-items: center;
+    padding: 5px; border: 0; border-radius: 4px;
+    background: transparent; color: var(--muted); cursor: pointer;
+  }
+  .copy .i { width: 15px; height: 15px; }
+  .copy:hover { color: var(--ink); background: var(--panel-2); }
+  .copy .i-check { display: none; }
+  .copy.is-copied .i-copy { display: none; }
+  .copy.is-copied .i-check { display: block; color: var(--accent); }
+
+  /* Quiet stat list */
+  .stats { margin: 0; padding: 4px 0 4px clamp(0px, 2.6vw, 32px); border-left: 1px solid var(--line); display: grid; gap: 16px; }
+  .stat { display: grid; grid-template-columns: 3.2rem minmax(0, 1fr); align-items: baseline; gap: 10px; }
+  .stat dt { font: 700 1.4rem/1 var(--font-display); color: var(--accent); }
+  .stat dd { margin: 0; font-size: .88rem; line-height: 1.35; color: var(--ink-2); }
+
+  /* Sections */
+  .section { padding-block: clamp(18px, 2.6vw, 30px) 0; }
+  .section.section-lg { padding-top: clamp(36px, 5vw, 64px); }
+  .section-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; margin-bottom: 12px; }
+  .section-title {
+    margin: 0;
+    font: 700 clamp(1.25rem, 1.05rem + .7vw, 1.55rem)/1.1 var(--font-display);
+    letter-spacing: .01em;
+  }
+
+  /* Achievements */
+  .achs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .ach {
+    display: flex; flex-direction: column; gap: 10px;
+    padding: 16px 18px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    transition: border-color .2s;
+  }
+  .ach:hover { border-color: var(--accent-line); }
+  .ach-head { display: flex; align-items: center; gap: 12px; }
+  .badge {
+    flex: none; display: grid; place-items: center;
+    width: 36px; height: 40px;
+    background: var(--accent-line);
+    clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  }
+  .badge span {
+    display: grid; place-items: center;
+    width: 33px; height: 37px;
+    background: var(--panel-2);
+    clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+    color: var(--accent);
+  }
+  .badge .i { width: 17px; height: 17px; }
+  .ach h3 { margin: 0; font: 700 1rem/1.25 var(--font-display); letter-spacing: .01em; }
+  .ach p { margin: 0; font-size: .9rem; line-height: 1.5; color: var(--ink-2); text-wrap: pretty; }
+
+  /* Projects: expanding cards, one open at a time */
+  .projects { container-type: inline-size; display: flex; gap: 10px; height: 410px; }
+  .proj {
+    position: relative; flex: 1 1 0; min-width: 0; overflow: hidden;
+    border: 1px solid var(--line); border-radius: 6px; background: var(--panel);
+    transition: flex-grow .55s cubic-bezier(.2, .7, .2, 1), border-color .2s;
+  }
+  .proj.is-active { flex-grow: 3.4; border-color: var(--accent-line); }
+  .proj-hit {
+    position: absolute; inset: 0; z-index: 3; width: 100%; height: 100%;
+    padding: 0; border: 0; border-radius: 6px; background: transparent; cursor: pointer;
+  }
+  .proj.is-active .proj-hit { z-index: 1; cursor: default; }
+  .proj-hit:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .cover {
+    position: absolute; top: 0; left: 50%;
+    height: 100%; width: auto; max-width: none;
+    transform: translateX(-50%);
+    opacity: .62; filter: saturate(.8);
+    transition: opacity .3s;
+  }
+  .proj:hover .cover { opacity: .8; }
+  .proj.is-active .cover { opacity: 0; }
+  .proj::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(to top, var(--bg) 4%, var(--shade) 40%, transparent 78%);
+  }
+  .proj-label {
+    position: absolute; left: 14px; right: 14px; bottom: 14px; z-index: 2;
+    display: grid; gap: 10px; pointer-events: none;
+    transition: opacity .2s;
+  }
+  .proj.is-active .proj-label { opacity: 0; visibility: hidden; }
+  .proj-label h3, .proj-head h3 { margin: 0; font: 700 1.02rem/1.2 var(--font-display); letter-spacing: .01em; }
+  .proj-label .hud { display: block; margin-top: .3rem; }
+  .app-icon {
+    display: grid; place-items: center;
+    width: 44px; height: 44px; border-radius: 11px;
+    border: 1px solid var(--line-2); background: var(--panel-2);
+    object-fit: cover;
+    font: 800 1.1rem/1 var(--font-display); color: var(--accent);
+  }
+  .proj-body {
+    position: absolute; top: 0; bottom: 0; left: 0; right: 0; z-index: 2;
+    width: calc((100cqw - 30px) * 3.4 / 6.4 - 2px);
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 22px;
+    padding: 22px;
+    opacity: 0; visibility: hidden;
+    transition: opacity .2s, visibility 0s .2s;
+  }
+  .proj.is-active .proj-body { opacity: 1; visibility: visible; transition: opacity .35s .28s, visibility 0s .28s; }
+  .proj-text { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .proj-head { display: flex; align-items: center; gap: 12px; }
+  .proj-head .app-icon { width: 52px; height: 52px; border-radius: 13px; }
+  .proj-head h3 { font-size: 1.3rem; }
+  .proj-head .hud { display: block; margin-top: .3rem; }
+  .tags { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  .tags li {
+    padding: .16rem .5rem; border: 1px solid var(--line-2); border-radius: 3px;
+    font: 600 .68rem/1.3 var(--font-display); letter-spacing: .08em; text-transform: uppercase;
+    color: var(--ink-2);
+  }
+  .tags li.hl { border-color: var(--accent-line); color: var(--accent); }
+  .proj-role { margin: 0; font-size: .86rem; color: var(--muted); }
+  .proj-role b { color: var(--ink); font-weight: 600; }
+  .proj-desc { margin: 0; font-size: .92rem; line-height: 1.5; color: var(--ink-2); text-wrap: pretty; }
+  .stores { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
+  .store {
+    display: inline-flex; align-items: center; gap: .4rem;
+    padding: .42rem .7rem; border: 1px solid var(--line-2); border-radius: var(--radius);
+    background: var(--panel); color: var(--ink); text-decoration: none; font-size: .84rem;
+  }
+  .store:hover { border-color: var(--accent-line); }
+  .store .i { width: 14px; height: 14px; opacity: .6; }
+  .gallery { min-width: 0; min-height: 0; }
+  .gallery img { display: block; border-radius: 8px; border: 1px solid var(--line-2); background: var(--panel-2); }
+  .gallery.landscape { display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+  .gallery.landscape img { width: 100%; height: auto; }
+  /* Portrait screenshots as a small deck: one whole shot in front, the next one peeking out and fading */
+  .gallery.deckbox {
+    container-type: size;
+    display: grid; grid-template-rows: minmax(0, 1fr) auto; justify-items: center; align-items: center; gap: 10px;
+  }
+  .deck { position: relative; height: min(calc(100cqh - 24px), calc(100cqw / .76)); aspect-ratio: .76; cursor: pointer; }
+  .deck.single { aspect-ratio: .6; height: min(100cqh, calc(100cqw / .6)); cursor: default; }
+  .deck img {
+    position: absolute; top: 0; left: 0; width: 74%; height: 100%;
+    object-fit: cover; border-radius: 10px;
+    opacity: 0; transform: translateX(-12%) scale(.94);
+    transition: opacity .7s ease, transform .7s ease;
+  }
+  .deck.single img { width: 100%; }
+  .deck img.is-current { opacity: 1; transform: none; z-index: 2; box-shadow: 0 18px 40px -20px #000; }
+  .deck img.is-next {
+    opacity: .6; transform: translateX(40%) scale(.88); z-index: 1;
+    -webkit-mask-image: linear-gradient(90deg, #000 62%, transparent 100%);
+    mask-image: linear-gradient(90deg, #000 62%, transparent 100%);
+  }
+  .dots { display: flex; gap: 4px; }
+  .dots button {
+    width: 22px; height: 16px; padding: 6px 2px; border: 0; cursor: pointer;
+    background: var(--line-2); background-clip: content-box; border-radius: 4px;
+  }
+  .dots button[aria-current="true"] { background-color: var(--accent); }
+  .systems { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+  .systems li { display: flex; align-items: flex-start; gap: 10px; font-size: .88rem; line-height: 1.4; color: var(--ink-2); }
+  .systems li::before { content: ""; width: 6px; height: 6px; flex: none; margin-top: .48em; transform: rotate(45deg); border: 1.5px solid var(--accent); }
+
+  /* Career path: oldest to newest, left to right */
+  .path { position: relative; list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 24px; }
+  .path::before {
+    content: ""; position: absolute; left: 5px; right: 0; top: 6px; height: 1px;
+    background: linear-gradient(90deg, var(--line-2), var(--line-2) 70%, var(--accent-line));
+  }
+  .stop { position: relative; min-width: 0; padding-top: 28px; }
+  .pin {
+    position: absolute; top: 1px; left: 0;
+    width: 11px; height: 11px; transform: rotate(45deg);
+    background: var(--bg); border: 1.5px solid var(--line-2);
+  }
+  .stop.is-now .pin { background: var(--accent); border-color: var(--accent); animation: ping 2.6s ease-out infinite; }
+  @keyframes ping {
+    0%   { box-shadow: 0 0 0 0 var(--accent-ring); }
+    70%  { box-shadow: 0 0 0 7px transparent; }
+    100% { box-shadow: 0 0 0 0 transparent; }
+  }
+  .stop .when { display: block; }
+  .stop.is-now .when { color: var(--accent); }
+  .company { margin: .4rem 0 0; font: 700 1.1rem/1.25 var(--font-display); letter-spacing: .01em; }
+  .role { margin: .15rem 0 0; font-size: .86rem; line-height: 1.35; color: var(--muted); }
+  .role b { color: var(--ink); font-weight: 600; }
+  .worked { margin: .45rem 0 0; font-size: .86rem; line-height: 1.4; color: var(--ink-2); }
+  .worked a { color: var(--ink); text-decoration: underline; text-decoration-color: var(--accent-line); text-underline-offset: .22em; }
+  .worked a:hover { color: var(--accent); }
+
+  /* Stack: one line */
+  .stack-line {
+    display: flex; flex-wrap: nowrap; align-items: center; gap: 8px 22px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+  }
+  .stack-line h2 { margin: 0; flex: none; }
+  .stack-line ul { flex: 1 1 auto; min-width: 0; list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; }
+  .stack-line li { display: inline-flex; align-items: center; gap: 9px; font-size: .95rem; line-height: 1.4; color: var(--ink); white-space: nowrap; }
+  .stack-line li::before {
+    content: ""; width: 5px; height: 5px; flex: none;
+    transform: rotate(45deg); background: var(--accent-line);
+  }
+
+  /* Footer */
+  .foot { padding-block: clamp(44px, 6vw, 72px) 28px; }
+  .fine { margin: 0; }
+
+  @media (max-width: 920px) {
+    .achs { grid-template-columns: minmax(0, 1fr); }
+    .proj-body { grid-template-columns: minmax(0, 1fr) minmax(0, .8fr); }
+  }
+  @media (max-width: 760px) {
+    .hero { grid-template-columns: minmax(0, 1fr); row-gap: 26px; }
+    .hero-top { margin-bottom: -8px; align-items: flex-start; }
+    .hero-main, .hero > .stats, .hero > .stack-line { grid-column: 1; }
+    .hero > .stack-line { margin-top: 0; }
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 20px; padding: 0; border-left: 0; }
+
+    .projects { flex-direction: column; height: auto; }
+    .proj { flex: none; }
+    .cover { left: 0; width: 100%; height: 74px; transform: none; object-fit: cover; }
+    .proj::after { background: linear-gradient(90deg, var(--bg) 10%, var(--shade) 60%, transparent); }
+    .proj.is-active::after { background: var(--shade); }
+    .proj-label {
+      position: relative; left: auto; right: auto; bottom: auto;
+      grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px;
+      padding: 14px;
+    }
+    .proj.is-active .proj-label { opacity: 1; visibility: visible; }
+    .proj.is-active .proj-hit { height: 74px; }
+    .proj-body {
+      position: relative; width: auto; display: none;
+      grid-template-columns: minmax(0, 1fr); gap: 14px;
+      padding: 0 14px 16px;
+      opacity: 1; visibility: visible;
+    }
+    .proj.is-active .proj-body { display: grid; }
+    .proj-head { display: none; }
+    .gallery { order: -1; }
+    .gallery.deckbox { height: 280px; }
+    .gallery.landscape img + img { display: none; }
+
+    .path { grid-template-columns: minmax(0, 1fr); gap: 18px; display: flex; flex-direction: column-reverse; }
+    .path::before { left: 5px; right: auto; top: 6px; bottom: 6px; width: 1px; height: auto; background: var(--line-2); }
+    .stop { padding: 0 0 0 28px; }
+    .stop .pin { top: 4px; }
+  }
+  @media (max-width: 560px) {
+    .actions { flex-direction: column; align-items: stretch; gap: 18px; }
+    .btn-primary { justify-content: center; }
+    .stack-line { flex-wrap: wrap; }
+  }
+  @media (max-width: 400px) {
+    .stats { grid-template-columns: minmax(0, 1fr); }
+    .ach { padding: 14px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stop.is-now .pin { animation: none; }
+    .ach, .btn-primary, .link, .link .i, .proj, .cover, .proj-body, .proj-label, .deck img { transition: none !important; }
+  }
+
+  @media print {
+    :root {
+      --bg: #FFFFFF; --panel: #FFFFFF; --panel-2: #FFFFFF; --line: #D8DAE6; --line-2: #C2C6D6;
+      --ink: #12131C; --ink-2: #2D3040; --muted: #5C6178; --accent: #8A5A00; --accent-line: #C9A44E;
+      --accent-ring: transparent; color-scheme: light;
+    }
+    body { font-size: 10pt; }
+    body::before, .lang, .copy { display: none !important; }
+    .stop.is-now .pin { animation: none; }
+    .ach, .stop { break-inside: avoid; }
+    .projects { display: none; }
+    a { color: inherit; }
+  }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M21 3 10.2 13.8"/><path d="M21 3 14.4 21l-4.2-7.2L3 9.6z"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 7 8.5 6 8.5-6"/></symbol>
+  <symbol id="i-code" viewBox="0 0 24 24"><path d="m8 7-5 5 5 5"/><path d="m16 7 5 5-5 5"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-ext" viewBox="0 0 24 24"><path d="M7 17 17 7"/><path d="M8.5 7H17v8.5"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H10l-6 4z"/><path d="M8 9.5h8M8 12.5h5"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 5 6v5.5c0 4.3 2.9 7.6 7 9.5 4.1-1.9 7-5.2 7-9.5V6z"/><path d="m8.5 13.5 3.5-3.5 3.5 3.5"/></symbol>
+  <symbol id="i-coins" viewBox="0 0 24 24"><ellipse cx="12" cy="6.5" rx="7" ry="2.5"/><path d="M5 6.5v5c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-5"/><path d="M5 11.5v5c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-5"/></symbol>
+</svg>
+
+<header class="hero wrap" id="top">
+  <div class="hero-top">
+    <p class="eyebrow hud">Unity C# / .NET Developer · Multiplayer</p>
+    <div class="lang" role="group" aria-label="Language / Язык">
+      <button type="button" data-set-lang="ru" aria-pressed="true">RU</button>
+      <button type="button" data-set-lang="en" aria-pressed="false">EN</button>
+    </div>
+  </div>
+  <div class="hero-main">
+    <h1 class="name"><span lang="ru">Сергей Хрулев</span><span lang="en">Sergey Khrulev</span></h1>
+    <p class="thesis" lang="ru">Делаю игровые системы для мультиплеера на Unity и .NET&nbsp;8 и веду фичи целиком, <b>от серверных правил до клиентского UI</b>.</p>
+    <p class="thesis" lang="en">I build multiplayer game systems in Unity and .NET&nbsp;8 and own features end to end, <b>from server rules to client UI</b>.</p>
+
+    <div class="actions">
+      <a class="btn-primary" href="https://t.me/skyFG" target="_blank" rel="noopener">
+        <svg class="i" aria-hidden="true"><use href="#i-send"/></svg>Telegram
+      </a>
+      <div class="links">
+        <span class="email">
+          <a class="link" href="mailto:Sergeyxow@yandex.ru"><svg class="i" aria-hidden="true"><use href="#i-mail"/></svg><span class="addr">Sergeyxow@yandex.ru</span></a>
+          <button type="button" class="copy" data-copy="Sergeyxow@yandex.ru">
+            <svg class="i i-copy" aria-hidden="true"><use href="#i-copy"/></svg>
+            <svg class="i i-check" aria-hidden="true"><use href="#i-check"/></svg>
+            <span class="sr" lang="ru">Скопировать адрес</span><span class="sr" lang="en">Copy address</span>
+          </button>
+        </span>
+        <a class="link" href="https://github.com/Skycheeck" target="_blank" rel="noopener"><svg class="i" aria-hidden="true"><use href="#i-code"/></svg>GitHub</a>
+        <a class="link" lang="ru" href="https://docs.google.com/document/d/108SIkivtJf4e6IqoXGq07z08Bwg1w9LbAkdxwQABRlA/edit" target="_blank" rel="noopener"><svg class="i" aria-hidden="true"><use href="#i-doc"/></svg>Резюме<svg class="i i-ext" aria-hidden="true"><use href="#i-ext"/></svg></a>
+        <a class="link" lang="en" href="https://docs.google.com/document/d/1S-jDfLqPZMsDwkfrLgv_XlUqEhR5Lht-eEQrKq2KvbU/edit" target="_blank" rel="noopener"><svg class="i" aria-hidden="true"><use href="#i-doc"/></svg>CV<svg class="i i-ext" aria-hidden="true"><use href="#i-ext"/></svg></a>
+      </div>
+    </div>
+  </div>
+
+  <dl class="stats">
+    <div class="stat">
+      <dt>6+</dt>
+      <dd><span lang="ru">лет в коммерческой разработке</span><span lang="en">years in commercial development</span></dd>
+    </div>
+    <div class="stat">
+      <dt>2+</dt>
+      <dd><span lang="ru">года в роли Lead Developer</span><span lang="en">years as Lead Developer</span></dd>
+    </div>
+    <div class="stat">
+      <dt>3</dt>
+      <dd><span lang="ru">вышедшие игры в портфолио</span><span lang="en">released games in the portfolio</span></dd>
+    </div>
+    <div class="stat">
+      <dt>B2</dt>
+      <dd><span lang="ru">английский, русский родной</span><span lang="en">English, native Russian</span></dd>
+    </div>
+  </dl>
+
+  <div class="stack-line">
+    <h2 class="hud" id="stack-title"><span lang="ru">Стек</span><span lang="en">Stack</span></h2>
+    <ul>
+      <li>C#</li><li>Unity</li><li>.NET 8</li><li>ECS</li><li>Unity DOTS</li>
+      <li><span lang="ru">Мультиплеер</span><span lang="en">Multiplayer</span></li>
+      <li><span lang="ru">Сетевые протоколы</span><span lang="en">Networking</span></li>
+      <li>SQL</li><li>UGUI</li><li>Addressables</li>
+    </ul>
+  </div>
+</header>
+
+<main>
+  <section class="section wrap" aria-labelledby="ach-title">
+    <div class="section-head">
+      <h2 class="section-title" id="ach-title"><span lang="ru">Достижения</span><span lang="en">Achievements</span></h2>
+      <span class="hud">OneState RP · <span lang="ru">сервер и клиент</span><span lang="en">server and client</span></span>
+    </div>
+    <div class="achs">
+      <article class="ach">
+        <div class="ach-head">
+          <div class="badge" aria-hidden="true"><span><svg class="i"><use href="#i-chat"/></svg></span></div>
+          <h3><span lang="ru">Внутриигровой чат</span><span lang="en">In-game chat</span></h3>
+        </div>
+        <p lang="ru">Серверная архитектура с нуля: каналы, правила доступа, антиспам, мьют, стикеры. Гейм-дизайнеры настраивают всё конфигами. Клиентский UI тоже мой.</p>
+        <p lang="en">Server architecture from scratch: channels, access rules, anti-spam, mute, stickers. Game designers configure it all through configs. I built the client UI too.</p>
+      </article>
+      <article class="ach">
+        <div class="ach-head">
+          <div class="badge" aria-hidden="true"><span><svg class="i"><use href="#i-shield"/></svg></span></div>
+          <h3><span lang="ru">Система фракций</span><span lang="en">Faction system</span></h3>
+        </div>
+        <p lang="ru">Вступление, карьерный рост и задания для новичков. Решение под одну фракцию сделал универсальным, новые подключаются конфигами.</p>
+        <p lang="en">Joining, career progression and tasks for newcomers. Turned a single-faction solution into a universal one; new factions plug in through configs.</p>
+      </article>
+      <article class="ach">
+        <div class="ach-head">
+          <div class="badge" aria-hidden="true"><span><svg class="i"><use href="#i-coins"/></svg></span></div>
+          <h3><span lang="ru">Реворк экономики</span><span lang="en">Economy rework</span></h3>
+        </div>
+        <p lang="ru">Сотрудники со сменами и серверными таймерами, бонусы прогресса, миграция данных игроков, безопасный вывод устаревшей подсистемы.</p>
+        <p lang="en">Employees with shifts and server timers, progression bonuses, player data migration and the safe retirement of a legacy subsystem.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section section-lg wrap" id="projects" aria-labelledby="proj-title">
+    <div class="section-head">
+      <h2 class="section-title" id="proj-title"><span lang="ru">Проекты</span><span lang="en">Projects</span></h2>
+      <span class="hud"><span lang="ru">наведите или нажмите</span><span lang="en">hover or tap</span></span>
+    </div>
+    <div class="projects">
+
+      <article class="proj is-active" data-proj="onestate">
+        <img class="cover" src="assets/onestate-1.webp" alt="" loading="lazy" decoding="async">
+        <button type="button" class="proj-hit" aria-expanded="true" aria-labelledby="p1-name" aria-controls="p1-body"></button>
+        <div class="proj-label">
+          <img class="app-icon" src="assets/onestate-icon.webp" width="44" height="44" alt="">
+          <div><h3 id="p1-name">OneState RP</h3><span class="hud">ChillBase · 2024 – <span lang="ru">сейчас</span><span lang="en">now</span></span></div>
+        </div>
+        <div class="proj-body" id="p1-body">
+          <div class="proj-text">
+            <div class="proj-head">
+              <img class="app-icon" src="assets/onestate-icon.webp" width="52" height="52" alt="">
+              <div><h3>OneState RP</h3><span class="hud">ChillBase · 2024 – <span lang="ru">сейчас</span><span lang="en">now</span></span></div>
+            </div>
+            <ul class="tags"><li>3D</li><li><span lang="ru">Мультиплеер</span><span lang="en">Multiplayer</span></li><li><span lang="ru">Открытый мир</span><span lang="en">Open world</span></li><li class="hl"><span lang="ru">10M+ скачиваний</span><span lang="en">10M+ downloads</span></li></ul>
+            <p class="proj-role">Multiplayer Unity / .NET Developer</p>
+            <p class="proj-desc" lang="ru">Мобильная RP с открытым миром. Делаю фичи целиком на сервере (.NET&nbsp;8) и клиенте (Unity): чат, фракции, экономика.</p>
+            <p class="proj-desc" lang="en">An open-world mobile RP. I build features end to end on the server (.NET&nbsp;8) and the client (Unity): chat, factions, economy.</p>
+            <div class="stores">
+              <a class="store" href="https://play.google.com/store/apps/details?id=com.Chillgaming.oneState" target="_blank" rel="noopener">Google Play<svg class="i" aria-hidden="true"><use href="#i-ext"/></svg></a>
+              <a class="store" href="https://apps.apple.com/app/id1597760047" target="_blank" rel="noopener">App Store<svg class="i" aria-hidden="true"><use href="#i-ext"/></svg></a>
+            </div>
+          </div>
+          <div class="gallery landscape">
+            <img src="assets/onestate-1.webp" width="1200" height="554" loading="lazy" decoding="async" alt="OneState RP">
+            <img src="assets/onestate-2.webp" width="1200" height="554" loading="lazy" decoding="async" alt="OneState RP">
+          </div>
+        </div>
+      </article>
+
+      <article class="proj" data-proj="puzzlevilla">
+        <img class="cover" src="assets/puzzlevilla-1.webp" alt="" loading="lazy" decoding="async">
+        <button type="button" class="proj-hit" aria-expanded="false" aria-labelledby="p2-name" aria-controls="p2-body"></button>
+        <div class="proj-label">
+          <img class="app-icon" src="assets/puzzlevilla-icon.webp" width="44" height="44" alt="">
+          <div><h3 id="p2-name">Puzzle Villa</h3><span class="hud">ZiMAD · 2023 – 2024</span></div>
+        </div>
+        <div class="proj-body" id="p2-body">
+          <div class="proj-text">
+            <div class="proj-head">
+              <img class="app-icon" src="assets/puzzlevilla-icon.webp" width="52" height="52" alt="">
+              <div><h3>Puzzle Villa</h3><span class="hud">ZiMAD · 2023 – 2024</span></div>
+            </div>
+            <ul class="tags"><li>2D</li><li><span lang="ru">Пазл</span><span lang="en">Puzzle</span></li><li>Live-ops</li><li>Unity DOTS</li></ul>
+            <p class="proj-role">Unity Developer (live-ops)</p>
+            <p class="proj-desc" lang="ru">Мобильная игра: пазлы и обустройство виллы. Поддерживал вышедшую игру: игровая логика на Unity Entities, интерфейсы на UGUI, доработки и обновления.</p>
+            <p class="proj-desc" lang="en">A mobile game about jigsaw puzzles and renovating a villa. Supported the live game: gameplay logic on Unity Entities, UGUI interfaces, improvements and updates.</p>
+            <div class="stores">
+              <a class="store" href="https://apps.apple.com/app/id1555218430" target="_blank" rel="noopener">App Store<svg class="i" aria-hidden="true"><use href="#i-ext"/></svg></a>
+            </div>
+          </div>
+          <div class="gallery deckbox">
+            <div class="deck">
+              <img class="is-current" src="assets/puzzlevilla-1.webp" width="400" height="711" loading="lazy" decoding="async" alt="Puzzle Villa">
+              <img class="is-next" src="assets/puzzlevilla-2.webp" width="400" height="711" loading="lazy" decoding="async" alt="Puzzle Villa">
+              <img src="assets/puzzlevilla-3.webp" width="400" height="711" loading="lazy" decoding="async" alt="Puzzle Villa">
+              <img src="assets/puzzlevilla-4.webp" width="400" height="711" loading="lazy" decoding="async" alt="Puzzle Villa">
+            </div>
+            <div class="dots">
+              <button type="button" aria-label="1 / 4" aria-current="true"></button>
+              <button type="button" aria-label="2 / 4"></button>
+              <button type="button" aria-label="3 / 4"></button>
+              <button type="button" aria-label="4 / 4"></button>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="proj" data-proj="ace">
+        <img class="cover" src="assets/ace-art.jpg" alt="" loading="lazy" decoding="async">
+        <button type="button" class="proj-hit" aria-expanded="false" aria-labelledby="p3-name" aria-controls="p3-body"></button>
+        <div class="proj-label">
+          <span class="app-icon" aria-hidden="true">A</span>
+          <div><h3 id="p3-name">ACE</h3><span class="hud">LitGames · 2021 – 2022</span></div>
+        </div>
+        <div class="proj-body" id="p3-body">
+          <div class="proj-text">
+            <div class="proj-head">
+              <span class="app-icon" aria-hidden="true">A</span>
+              <div><h3>ACE</h3><span class="hud">LitGames · 2021 – 2022</span></div>
+            </div>
+            <ul class="tags"><li><span lang="ru">Карточная игра</span><span lang="en">Card game</span></li><li>ECS</li><li class="hl">Lead</li></ul>
+            <p class="proj-desc" lang="ru">Idle Card Battle Stories: карточная игра с сюжетными историями. Руководил Unity-командой и написал ядро игры:</p>
+            <p class="proj-desc" lang="en">Idle Card Battle Stories, a card battler with story campaigns. I led the Unity team and wrote the core of the game:</p>
+            <ul class="systems">
+              <li><span lang="ru">engine-agnostic боевую систему на ECS (Entitas);</span><span lang="en">an engine-agnostic combat system on ECS (Entitas);</span></li>
+              <li><span lang="ru">способности карт и врагов, баффы, автобой, журнал боя;</span><span lang="en">card and enemy abilities, buffs, auto-battle, a battle log;</span></li>
+              <li><span lang="ru">конструктор колод и загрузку контента через CDN.</span><span lang="en">the deck builder and content loading through a CDN.</span></li>
+            </ul>
+            <div class="stores">
+              <a class="store" href="https://litgames.net/games#ACE" target="_blank" rel="noopener">litgames.net<svg class="i" aria-hidden="true"><use href="#i-ext"/></svg></a>
+            </div>
+          </div>
+          <div class="gallery deckbox">
+            <div class="deck single">
+              <img class="is-current" src="assets/ace-art.jpg" width="600" height="1000" loading="lazy" decoding="async" alt="ACE">
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="proj" data-proj="score">
+        <img class="cover" src="assets/score-1.webp" alt="" loading="lazy" decoding="async">
+        <button type="button" class="proj-hit" aria-expanded="false" aria-labelledby="p4-name" aria-controls="p4-body"></button>
+        <div class="proj-label">
+          <img class="app-icon" src="assets/score-icon.webp" width="44" height="44" alt="">
+          <div><h3 id="p4-name">The Score</h3><span class="hud">LitGames · 2021</span></div>
+        </div>
+        <div class="proj-body" id="p4-body">
+          <div class="proj-text">
+            <div class="proj-head">
+              <img class="app-icon" src="assets/score-icon.webp" width="52" height="52" alt="">
+              <div><h3>The Score</h3><span class="hud">LitGames · 2021</span></div>
+            </div>
+            <ul class="tags"><li>2D</li><li><span lang="ru">Визуальные новеллы</span><span lang="en">Visual novels</span></li></ul>
+            <p class="proj-role"><b>Lead</b> C# Unity Developer</p>
+            <p class="proj-desc" lang="ru">Интерактивные истории с выбором. Сделал аудиосообщения и фотогалерею, разблокировку выборов за рекламу, аналитику; выпускал обновления.</p>
+            <p class="proj-desc" lang="en">Interactive stories with choices. Built audio messages and a photo gallery, ad-unlocked choices and analytics; shipped updates.</p>
+            <div class="stores">
+              <a class="store" href="https://play.google.com/store/apps/details?id=com.LitGames.Score" target="_blank" rel="noopener">Google Play<svg class="i" aria-hidden="true"><use href="#i-ext"/></svg></a>
+              <a class="store" href="https://apps.apple.com/app/id1525377550" target="_blank" rel="noopener">App Store<svg class="i" aria-hidden="true"><use href="#i-ext"/></svg></a>
+            </div>
+          </div>
+          <div class="gallery deckbox">
+            <div class="deck">
+              <img class="is-current" src="assets/score-1.webp" width="400" height="711" loading="lazy" decoding="async" alt="The Score">
+              <img class="is-next" src="assets/score-2.webp" width="400" height="711" loading="lazy" decoding="async" alt="The Score">
+              <img src="assets/score-3.webp" width="400" height="711" loading="lazy" decoding="async" alt="The Score">
+              <img src="assets/score-4.webp" width="400" height="711" loading="lazy" decoding="async" alt="The Score">
+            </div>
+            <div class="dots">
+              <button type="button" aria-label="1 / 4" aria-current="true"></button>
+              <button type="button" aria-label="2 / 4"></button>
+              <button type="button" aria-label="3 / 4"></button>
+              <button type="button" aria-label="4 / 4"></button>
+            </div>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <section class="section section-lg wrap" aria-labelledby="exp-title">
+    <div class="section-head">
+      <h2 class="section-title" id="exp-title"><span lang="ru">Опыт</span><span lang="en">Experience</span></h2>
+      <span class="hud">2020 – 2026</span>
+    </div>
+    <ol class="path">
+      <li class="stop">
+        <span class="pin" aria-hidden="true"></span>
+        <span class="when hud">2020 – 2021</span>
+        <h3 class="company">Lipsar</h3>
+        <p class="role">C# Unity Developer</p>
+        <p class="worked"><span lang="ru">Прототипы MergeFight и ShooterCrowd</span><span lang="en">Prototypes MergeFight and ShooterCrowd</span></p>
+      </li>
+      <li class="stop">
+        <span class="pin" aria-hidden="true"></span>
+        <span class="when hud">2021 – 2023</span>
+        <h3 class="company">LitGames</h3>
+        <p class="role"><b>Lead</b> C# Unity Developer</p>
+        <p class="worked"><a href="#projects" data-open-proj="ace">ACE</a>, <a href="#projects" data-open-proj="score">The Score</a></p>
+      </li>
+      <li class="stop">
+        <span class="pin" aria-hidden="true"></span>
+        <span class="when hud">2023 – 2024</span>
+        <h3 class="company">ZiMAD</h3>
+        <p class="role">Unity Developer (live-ops)</p>
+        <p class="worked"><a href="#projects" data-open-proj="puzzlevilla">Puzzle Villa</a></p>
+      </li>
+      <li class="stop is-now">
+        <span class="pin" aria-hidden="true"></span>
+        <span class="when hud">2024 – <span lang="ru">сейчас</span><span lang="en">now</span></span>
+        <h3 class="company">ChillBase</h3>
+        <p class="role">Multiplayer Unity / .NET Developer</p>
+        <p class="worked"><a href="#projects" data-open-proj="onestate">OneState RP</a></p>
+      </li>
+    </ol>
+  </section>
+
+</main>
+
+<footer class="foot wrap">
+  <p class="fine hud"><span lang="ru">© 2026 Сергей Хрулев</span><span lang="en">© 2026 Sergey Khrulev</span></p>
+  <p class="sr" id="copy-status" role="status" aria-live="polite"></p>
+</footer>
+
+<script>
+  (function () {
+    var d = document.documentElement;
+    var titles = { ru: 'Сергей Хрулев', en: 'Sergey Khrulev' };
+
+    function applyLang(l) {
+      d.setAttribute('data-lang', l);
+      d.lang = l;
+      document.title = titles[l];
+      document.querySelectorAll('[data-set-lang]').forEach(function (b) {
+        b.setAttribute('aria-pressed', b.getAttribute('data-set-lang') === l ? 'true' : 'false');
+      });
+    }
+    applyLang(d.getAttribute('data-lang') === 'en' ? 'en' : 'ru');
+
+    document.querySelectorAll('[data-set-lang]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var l = b.getAttribute('data-set-lang');
+        applyLang(l);
+        try { window.localStorage.setItem('cv-lang', l); } catch (e) {}
+        if (location.hash === '#ru' || location.hash === '#en') history.replaceState(null, '', '#' + l);
+      });
+    });
+    window.addEventListener('hashchange', function () {
+      var h = location.hash.slice(1).toLowerCase();
+      if (h === 'ru' || h === 'en') applyLang(h);
+    });
+
+    var cards = Array.prototype.slice.call(document.querySelectorAll('.proj'));
+    function activate(card) {
+      cards.forEach(function (c) {
+        var on = c === card;
+        c.classList.toggle('is-active', on);
+        c.querySelector('.proj-hit').setAttribute('aria-expanded', on ? 'true' : 'false');
+      });
+    }
+    var canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    cards.forEach(function (c) {
+      var hit = c.querySelector('.proj-hit');
+      hit.addEventListener('click', function () { activate(c); });
+      hit.addEventListener('focus', function () { activate(c); });
+      if (canHover) {
+        var t;
+        c.addEventListener('mouseenter', function () { t = setTimeout(function () { activate(c); }, 90); });
+        c.addEventListener('mouseleave', function () { clearTimeout(t); });
+      }
+    });
+    document.querySelectorAll('[data-open-proj]').forEach(function (a) {
+      a.addEventListener('click', function () {
+        var c = document.querySelector('.proj[data-proj="' + a.getAttribute('data-open-proj') + '"]');
+        if (c) activate(c);
+      });
+    });
+
+    document.querySelectorAll('.deck').forEach(function (deck) {
+      var imgs = Array.prototype.slice.call(deck.querySelectorAll('img'));
+      if (imgs.length < 2) return;
+      var dots = Array.prototype.slice.call(deck.parentNode.querySelectorAll('.dots button'));
+      var at = 0;
+      function show(n) {
+        at = (n + imgs.length) % imgs.length;
+        imgs.forEach(function (img, k) {
+          img.classList.toggle('is-current', k === at);
+          img.classList.toggle('is-next', k === (at + 1) % imgs.length);
+        });
+        dots.forEach(function (d, k) { d.setAttribute('aria-current', k === at ? 'true' : 'false'); });
+      }
+      dots.forEach(function (d, k) { d.addEventListener('click', function () { show(k); }); });
+      deck.addEventListener('click', function () { show(at + 1); });
+      deck._next = function () { show(at + 1); };
+    });
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setInterval(function () {
+        if (document.hidden) return;
+        var deck = document.querySelector('.proj.is-active .deck');
+        if (deck && deck._next && !deck.parentNode.matches(':hover')) deck._next();
+      }, 3400);
+    }
+
+    var status = document.getElementById('copy-status');
+    document.querySelectorAll('[data-copy]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var text = btn.getAttribute('data-copy');
+        function finish(ok) {
+          btn.classList.toggle('is-copied', ok);
+          status.textContent = ok ? (d.lang === 'ru' ? 'Адрес скопирован' : 'Address copied') : '';
+          clearTimeout(btn._t);
+          btn._t = setTimeout(function () { btn.classList.remove('is-copied'); status.textContent = ''; }, 1800);
+        }
+        function selectInstead() {
+          var el = btn.parentNode.querySelector('.addr');
+          if (el) {
+            var r = document.createRange();
+            r.selectNodeContents(el);
+            var s = window.getSelection();
+            s.removeAllRanges();
+            s.addRange(r);
+          }
+          finish(false);
+        }
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(function () { finish(true); }, selectInstead);
+          } else {
+            selectInstead();
+          }
+        } catch (e) { selectInstead(); }
+      });
+    });
+  })();
+</script>
+</body>
+</html>
