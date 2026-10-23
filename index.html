@@ -543,8 +543,8 @@
     <h2 class="hud" id="stack-title"><span lang="ru">Стек</span><span lang="en">Stack</span></h2>
     <ul>
       <li>C#</li><li>Unity</li><li>.NET 8</li><li>ECS</li><li>Unity DOTS</li>
-      <li><span lang="ru">Мультиплеер</span><span lang="en">Multiplayer</span></li>
-      <li><span lang="ru">Сетевые протоколы</span><span lang="en">Networking</span></li>
+      <li>Netcode</li>
+      <li>Reliable UDP</li>
       <li>SQL</li><li>UGUI</li><li>Addressables</li>
     </ul>
   </div>
@@ -638,11 +638,12 @@
               <img class="app-icon" src="assets/puzzlevilla-icon.webp" width="52" height="52" alt="">
               <div><h3>Puzzle Villa</h3><span class="hud">ZiMAD · 2023 – 2024</span></div>
             </div>
-            <ul class="tags"><li>2D</li><li><span lang="ru">Пазл</span><span lang="en">Puzzle</span></li><li>Live-ops</li><li>Unity DOTS</li></ul>
+            <ul class="tags"><li>2D</li><li><span lang="ru">Пазл</span><span lang="en">Puzzle</span></li><li>Live-ops</li><li>Unity DOTS</li><li class="hl"><span lang="ru">5M+ скачиваний</span><span lang="en">5M+ downloads</span></li></ul>
             <p class="proj-role">Unity Developer (live-ops)</p>
             <p class="proj-desc" lang="ru">Мобильная игра: пазлы и обустройство виллы. Поддерживал вышедшую игру: игровая логика на Unity Entities, интерфейсы на UGUI, доработки и обновления.</p>
             <p class="proj-desc" lang="en">A mobile game about jigsaw puzzles and renovating a villa. Supported the live game: gameplay logic on Unity Entities, UGUI interfaces, improvements and updates.</p>
             <div class="stores">
+              <a class="store" href="https://play.google.com/store/apps/details?id=com.zimad.puzzle.villa.jigsaw" target="_blank" rel="noopener">Google Play<svg class="i" aria-hidden="true"><use href="#i-ext"/></svg></a>
               <a class="store" href="https://apps.apple.com/app/id1555218430" target="_blank" rel="noopener">App Store<svg class="i" aria-hidden="true"><use href="#i-ext"/></svg></a>
             </div>
           </div>
@@ -829,6 +830,32 @@
       });
       c.addEventListener('pointerleave', function () { clearTimeout(t); });
     });
+    // Keep every opened card tall enough for its text at the current width and language
+    var projects = document.querySelector('.projects');
+    var wide = window.matchMedia('(min-width: 761px)');
+    function fitProjects() {
+      if (!projects) return;
+      projects.style.height = '';
+      if (!wide.matches) return;
+      var need = 0;
+      cards.forEach(function (c) {
+        var t = c.querySelector('.proj-text');
+        if (t) need = Math.max(need, t.scrollHeight);
+      });
+      projects.style.height = Math.max(410, Math.ceil(need) + 46) + 'px';
+    }
+    var fitQueued = false;
+    function queueFit() {
+      if (fitQueued) return;
+      fitQueued = true;
+      requestAnimationFrame(function () { fitQueued = false; fitProjects(); });
+    }
+    fitProjects();
+    window.addEventListener('resize', queueFit);
+    window.addEventListener('hashchange', queueFit);
+    document.querySelectorAll('[data-set-lang]').forEach(function (b) { b.addEventListener('click', queueFit); });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(queueFit);
+
     document.querySelectorAll('[data-open-proj]').forEach(function (a) {
       a.addEventListener('click', function () {
         var c = document.querySelector('.proj[data-proj="' + a.getAttribute('data-open-proj') + '"]');
