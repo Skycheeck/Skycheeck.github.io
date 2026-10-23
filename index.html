@@ -382,14 +382,14 @@
   .worked a:hover { color: var(--accent); }
 
   /* Stack: grouped by area, most important first, one line on wide screens */
-  /* Every group carries a left divider; the negative margin plus overflow hides the one at each line start */
-  .stack-line { padding-top: 18px; border-top: 1px solid var(--line); overflow: hidden; }
-  .stack-groups { list-style: none; margin: 0 0 0 -21px; padding: 0; display: flex; flex-wrap: wrap; align-items: baseline; row-gap: 10px; }
-  .stack-groups > li {
-    padding: 0 20px; border-left: 1px solid var(--line);
-    font-size: .95rem; line-height: 1.4; color: var(--ink);
-    white-space: nowrap;
+  .stack-line {
+    display: flex; flex-wrap: nowrap; align-items: baseline; gap: 8px 24px;
+    padding-top: 18px; border-top: 1px solid var(--line);
   }
+  .stack-line h2 { margin: 0; flex: none; }
+  /* Groups are set apart by a wider gap than the dots between items */
+  .stack-groups { flex: 1 1 auto; min-width: 0; list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 34px; }
+  .stack-groups > li { font-size: .95rem; line-height: 1.4; color: var(--ink); white-space: nowrap; }
   .stack-groups .dot { color: var(--accent-line); margin: 0 .2em; }
 
   /* Footer */
@@ -443,8 +443,9 @@
   @media (max-width: 560px) {
     .actions { flex-direction: column; align-items: stretch; gap: 18px; }
     .btn-primary { justify-content: center; }
-    .stack-groups > li { padding: 0 14px; white-space: normal; }
-    .stack-groups { margin-left: -15px; }
+    .stack-line { flex-wrap: wrap; }
+    .stack-groups { gap: 6px 26px; }
+    .stack-groups > li { white-space: normal; }
   }
   @media (max-width: 400px) {
     .stats { grid-template-columns: minmax(0, 1fr); }
@@ -538,7 +539,7 @@
   </dl>
 
   <div class="stack-line">
-    <h2 class="sr" id="stack-title"><span lang="ru">Стек</span><span lang="en">Stack</span></h2>
+    <h2 class="hud" id="stack-title"><span lang="ru">Стек</span><span lang="en">Stack</span></h2>
     <ul class="stack-groups">
       <li>C# <span class="dot" aria-hidden="true">·</span> ECS</li>
       <li>Unity <span class="dot" aria-hidden="true">·</span> Unity&nbsp;DOTS <span class="dot" aria-hidden="true">·</span> UGUI <span class="dot" aria-hidden="true">·</span> Addressables</li>
