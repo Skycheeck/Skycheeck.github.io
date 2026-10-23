@@ -381,19 +381,18 @@
   .worked a { color: var(--ink); text-decoration: underline; text-decoration-color: var(--accent-line); text-underline-offset: .22em; }
   .worked a:hover { color: var(--accent); }
 
-  /* Stack: one line */
-  .stack-line {
-    display: flex; flex-wrap: nowrap; align-items: center; gap: 8px 22px;
-    padding-top: 18px;
-    border-top: 1px solid var(--line);
+  /* Stack: grouped by area, most important first, one line on wide screens */
+  /* Every group carries a left divider; the negative margin plus overflow hides the one at each line start */
+  .stack-line { padding-top: 18px; border-top: 1px solid var(--line); overflow: hidden; }
+  .stack-groups { margin: 0 0 0 -21px; display: flex; flex-wrap: wrap; align-items: baseline; row-gap: 10px; }
+  .stack-groups > div {
+    display: flex; align-items: baseline; gap: 10px;
+    padding: 0 20px; border-left: 1px solid var(--line);
+    white-space: nowrap;
   }
-  .stack-line h2 { margin: 0; flex: none; }
-  .stack-line ul { flex: 1 1 auto; min-width: 0; list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; }
-  .stack-line li { display: inline-flex; align-items: center; gap: 9px; font-size: .95rem; line-height: 1.4; color: var(--ink); white-space: nowrap; }
-  .stack-line li::before {
-    content: ""; width: 5px; height: 5px; flex: none;
-    transform: rotate(45deg); background: var(--accent-line);
-  }
+  .stack-groups dt { margin: 0; }
+  .stack-groups dd { margin: 0; font-size: .93rem; line-height: 1.4; color: var(--ink); }
+  .stack-groups .dot { color: var(--accent-line); margin: 0 .2em; }
 
   /* Footer */
   .foot { padding-block: clamp(44px, 6vw, 72px) 28px; }
@@ -446,7 +445,9 @@
   @media (max-width: 560px) {
     .actions { flex-direction: column; align-items: stretch; gap: 18px; }
     .btn-primary { justify-content: center; }
-    .stack-line { flex-wrap: wrap; }
+    .stack-groups { flex-direction: column; row-gap: 9px; margin-left: 0; }
+    .stack-groups > div { padding: 0; border-left: 0; white-space: normal; }
+    .stack-groups dt { flex: none; width: 5.6rem; }
   }
   @media (max-width: 400px) {
     .stats { grid-template-columns: minmax(0, 1fr); }
@@ -540,13 +541,13 @@
   </dl>
 
   <div class="stack-line">
-    <h2 class="hud" id="stack-title"><span lang="ru">Стек</span><span lang="en">Stack</span></h2>
-    <ul>
-      <li>C#</li><li>Unity</li><li>.NET 8</li><li>ECS</li><li>Unity DOTS</li>
-      <li>Netcode</li>
-      <li>Reliable UDP</li>
-      <li>SQL</li><li>UGUI</li><li>Addressables</li>
-    </ul>
+    <h2 class="sr" id="stack-title"><span lang="ru">Стек</span><span lang="en">Stack</span></h2>
+    <dl class="stack-groups">
+      <div><dt class="hud"><span lang="ru">Основа</span><span lang="en">Core</span></dt><dd>C# <span class="dot" aria-hidden="true">·</span> ECS</dd></div>
+      <div><dt class="hud"><span lang="ru">Клиент</span><span lang="en">Client</span></dt><dd>Unity <span class="dot" aria-hidden="true">·</span> Unity&nbsp;DOTS <span class="dot" aria-hidden="true">·</span> UGUI <span class="dot" aria-hidden="true">·</span> Addressables</dd></div>
+      <div><dt class="hud"><span lang="ru">Сервер</span><span lang="en">Server</span></dt><dd>.NET&nbsp;8 <span class="dot" aria-hidden="true">·</span> SQL</dd></div>
+      <div><dt class="hud"><span lang="ru">Сеть</span><span lang="en">Network</span></dt><dd>Netcode <span class="dot" aria-hidden="true">·</span> Reliable&nbsp;UDP</dd></div>
+    </dl>
   </div>
 </header>
 
