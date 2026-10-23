@@ -315,8 +315,6 @@
   .store .i { width: 14px; height: 14px; opacity: .6; }
   .gallery { min-width: 0; min-height: 0; }
   .gallery img { display: block; border-radius: 8px; border: 1px solid var(--line-2); background: var(--panel-2); }
-  .gallery.landscape { display: flex; flex-direction: column; justify-content: center; gap: 8px; }
-  .gallery.landscape img { width: 100%; height: auto; }
   /* Portrait screenshots as a small deck: one whole shot in front, the next one peeking out and fading */
   .gallery.deckbox {
     container-type: size;
@@ -343,6 +341,15 @@
     background: var(--line-2); background-clip: content-box; border-radius: 4px;
   }
   .dots button[aria-current="true"] { background-color: var(--accent); }
+  /* Landscape shots: both stacked on wide screens, one at a time on phones */
+  .gallery.wide-deck { display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+  .deck.wide { position: static; height: auto; aspect-ratio: auto; display: flex; flex-direction: column; gap: 8px; cursor: default; }
+  .deck.wide img {
+    position: static; width: 100%; height: auto;
+    opacity: 1; transform: none; box-shadow: none; transition: none;
+    -webkit-mask-image: none; mask-image: none;
+  }
+  .gallery.wide-deck .dots { display: none; }
   .systems { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
   .systems li { display: flex; align-items: flex-start; gap: 10px; font-size: .88rem; line-height: 1.4; color: var(--ink-2); }
   .systems li::before { content: ""; width: 6px; height: 6px; flex: none; margin-top: .48em; transform: rotate(45deg); border: 1.5px solid var(--accent); }
@@ -425,7 +432,11 @@
     .proj-head { display: none; }
     .gallery { order: -1; }
     .gallery.deckbox { height: 280px; }
-    .gallery.landscape img + img { display: none; }
+    .gallery.wide-deck { align-items: center; }
+    .deck.wide { position: relative; display: block; width: 100%; aspect-ratio: 1200 / 554; cursor: pointer; }
+    .deck.wide img { position: absolute; inset: 0; height: 100%; object-fit: cover; opacity: 0; transition: opacity .7s ease; }
+    .deck.wide img.is-current { opacity: 1; }
+    .gallery.wide-deck .dots { display: flex; }
 
     .path { grid-template-columns: minmax(0, 1fr); gap: 18px; display: flex; flex-direction: column-reverse; }
     .path::before { left: 5px; right: auto; top: 6px; bottom: 6px; width: 1px; height: auto; background: var(--line-2); }
@@ -551,8 +562,8 @@
           <div class="badge" aria-hidden="true"><span><svg class="i"><use href="#i-chat"/></svg></span></div>
           <h3><span lang="ru">Внутриигровой чат</span><span lang="en">In-game chat</span></h3>
         </div>
-        <p lang="ru">Серверная архитектура с нуля: каналы, правила доступа, антиспам, мьют, стикеры. Гейм-дизайнеры настраивают всё конфигами. Клиентский UI тоже мой.</p>
-        <p lang="en">Server architecture from scratch: channels, access rules, anti-spam, mute, stickers. Game designers configure it all through configs. I built the client UI too.</p>
+        <p lang="ru">Серверная архитектура с нуля: каналы, правила доступа, антиспам, мьют, стикеры. Гейм-дизайнеры настраивают всё конфигами. На клиенте подключил интерфейс чата к серверу.</p>
+        <p lang="en">Server architecture from scratch: channels, access rules, anti-spam, mute, stickers. Game designers configure it all through configs. On the client, I hooked the chat UI up to the server.</p>
       </article>
       <article class="ach">
         <div class="ach-head">
@@ -576,7 +587,6 @@
   <section class="section section-lg wrap" id="projects" aria-labelledby="proj-title">
     <div class="section-head">
       <h2 class="section-title" id="proj-title"><span lang="ru">Проекты</span><span lang="en">Projects</span></h2>
-      <span class="hud"><span lang="ru">наведите или нажмите</span><span lang="en">hover or tap</span></span>
     </div>
     <div class="projects">
 
@@ -602,9 +612,15 @@
               <a class="store" href="https://apps.apple.com/app/id1597760047" target="_blank" rel="noopener">App Store<svg class="i" aria-hidden="true"><use href="#i-ext"/></svg></a>
             </div>
           </div>
-          <div class="gallery landscape">
-            <img src="assets/onestate-1.webp" width="1200" height="554" loading="lazy" decoding="async" alt="OneState RP">
-            <img src="assets/onestate-2.webp" width="1200" height="554" loading="lazy" decoding="async" alt="OneState RP">
+          <div class="gallery wide-deck">
+            <div class="deck wide">
+              <img class="is-current" src="assets/onestate-1.webp" width="1200" height="554" loading="lazy" decoding="async" alt="OneState RP">
+              <img class="is-next" src="assets/onestate-2.webp" width="1200" height="554" loading="lazy" decoding="async" alt="OneState RP">
+            </div>
+            <div class="dots">
+              <button type="button" aria-label="1 / 2" aria-current="true"></button>
+              <button type="button" aria-label="2 / 2"></button>
+            </div>
           </div>
         </div>
       </article>
@@ -802,16 +818,16 @@
         c.querySelector('.proj-hit').setAttribute('aria-expanded', on ? 'true' : 'false');
       });
     }
-    var canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
     cards.forEach(function (c) {
       var hit = c.querySelector('.proj-hit');
+      var t;
       hit.addEventListener('click', function () { activate(c); });
       hit.addEventListener('focus', function () { activate(c); });
-      if (canHover) {
-        var t;
-        c.addEventListener('mouseenter', function () { t = setTimeout(function () { activate(c); }, 90); });
-        c.addEventListener('mouseleave', function () { clearTimeout(t); });
-      }
+      c.addEventListener('pointerenter', function (e) {
+        if (e.pointerType !== 'mouse') return;
+        t = setTimeout(function () { activate(c); }, 90);
+      });
+      c.addEventListener('pointerleave', function () { clearTimeout(t); });
     });
     document.querySelectorAll('[data-open-proj]').forEach(function (a) {
       a.addEventListener('click', function () {
@@ -833,15 +849,15 @@
         });
         dots.forEach(function (d, k) { d.setAttribute('aria-current', k === at ? 'true' : 'false'); });
       }
-      dots.forEach(function (d, k) { d.addEventListener('click', function () { show(k); }); });
-      deck.addEventListener('click', function () { show(at + 1); });
+      dots.forEach(function (d, k) { d.addEventListener('click', function () { deck._touched = Date.now(); show(k); }); });
+      deck.addEventListener('click', function () { deck._touched = Date.now(); show(at + 1); });
       deck._next = function () { show(at + 1); };
     });
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       setInterval(function () {
         if (document.hidden) return;
         var deck = document.querySelector('.proj.is-active .deck');
-        if (deck && deck._next && !deck.parentNode.matches(':hover')) deck._next();
+        if (deck && deck._next && !deck.parentNode.matches(':hover') && Date.now() - (deck._touched || 0) > 5000) deck._next();
       }, 3400);
     }
 
